@@ -1,102 +1,183 @@
-# ATS Resume Scorer
 
-A web app that scores how well a resume matches a job description and returns actionable feedback. Built with FastAPI + Streamlit, using spaCy and Sentence Transformers for NLP and the Groq API for LLM-generated suggestions.
+# Insurance Data Analysis 
 
-## What it does
+Here is the adapted text content for your Power BI project, analyzing and reflecting the data from the PRISM Insurance Dashboard provided in the document.
 
-1. Upload a resume (PDF / DOC / DOCX) and paste a job description.
-2. The backend parses the resume, extracts skills and experience, and compares them to the JD using semantic similarity.
-3. You get an ATS score, a breakdown by category (formatting, keywords, content, skill validation, ATS compatibility), and LLM-written suggestions for what to improve.
-4. Past analyses are saved to your account so you can revisit them.
 
-## Tech stack
 
-- **Frontend:** Streamlit
-- **Backend:** FastAPI (Python)
-- **NLP:** spaCy (`en_core_web_md`), Sentence Transformers (`all-MiniLM-L6-v2`)
-- **LLM:** Groq API (Llama 3)
-- **Auth + Database:** Supabase (email/password and Google OAuth)
-- **PDF report export:** WeasyPrint + Jinja2
+## Problem Statement
 
-## Project structure
+This dashboard helps PRISM Insurance Pvt. Ltd.  understand their policyholders and claims processes better. It provides visibility into claim statuses, financial metrics, demographic distributions, and overall customer sentiment based on direct feedback. Through sentiment analysis and status tracking, the company can identify critical areas for improvement.
+
+Since a significant portion of claims are 'Rejected' (4.4K) compared to 'Settled' (3.4K) , and the majority of customer feedback falls under 'Needs improvement' (58 out of 97 reviews), the company must focus on improving the claims settlement process, enhancing policy transparency, and addressing user experience issues with their online portal.
+## Steps Followed -
+
+**Step 1:** Load data into Power BI Desktop, utilizing datasets containing policyholder details, claims history, and customer feedback.
+
+**Step 2:** Open Power Query Editor & in the view tab under the Data preview section, check "column distribution", "column quality" & "column profile" options.
+
+ **Step 3:** Select "column profiling based on entire dataset" to ensure all rows are evaluated.
+
+ **Step 4:** Address empty values in the dataset. For instance, `ClaimDate` and `ClaimAmount` might contain nulls or `0.00` values specifically for claims that have a `ClaimStatus` of 'Rejected' or 'Pending'.
+
+
+
+**Step 5:** Create visual filters (Slicers) for fields such as "Policy Type" , "Claim Status" , and "Age Group".
+
+
+ 
+**Step 6:** Add key performance indicator (KPI) card visuals to the canvas to represent high-level financials: Total Premium Amount (5.97M) , Total Coverage Amount (600.33M) , and Total Claim Amount (16.90M).
+
+
+**Step 7:** Add a Donut Chart to visualize the Count of Active vs. Inactive Policies.
+
+
+**Step 8:** Add a Bar Chart representing Premium Amount by Policy Type  (Travel, Health, Auto, Life, Home) .
+
+
+
+**Step 9:** Add an Area/Column chart to represent the Number of Claims by Claim Status , visualizing the distribution of Rejected, Settled, and Pending claims.
+
+
+
+**Step 10:** Create a Line Chart to track Claim Status by Age Group (Young Adult, Adult, Elder).
+
+
+**Step 11:** Incorporate Sentiment Analysis visuals. A Word Cloud was used to highlight frequent terms in customer feedback (e.g., "process", "service", "policy", "website") , and a Bar Chart was created to group Sentiment Scores into categories: Needs Improvement, Good, and Excellent.
+
+
+**Step 12:** Utilize DAX expressions to group customers by Age Group based on their actual age.
+
 
 ```
-ATS_SCORER/
-├── backend/              FastAPI app, NLP services, API routes
-├── frontend/             Streamlit app, views, components
-├── jupyter notebooks/    Research and dataset prep (not used at runtime)
-├── ml model/             Exported ML artifacts
-├── requirements.txt      Combined backend + frontend dependencies
-└── .env.example          Template for environment variables
+  Age Group = 
+  IF(Insurance[Age]<=25, "Young Adult",
+  IF(Insurance[Age]<=60, "Adult",
+  "Elder"))
+
 ```
 
-## Setup
 
-### 1. Clone and create a virtual environment
 
-```bash
-git clone <repo-url>
-cd ATS_SCORER
-python -m venv venv
-source venv/bin/activate         # Windows: venv\Scripts\activate
+**Step 13:** Create measures for Sentiment Categorization based on the continuous Sentiment Score (-1.0 to 1.0).
+
+
+```
+  Feedback Category = 
+  IF(Insurance[Score Sentiment] < 0, "Needs improvement",
+  IF(Insurance[Score Sentiment] <= 0.5, "Good",
+  "Excellent"))
+
 ```
 
-### 2. Install dependencies
+**Step 14:** The report was then formatted with the company logo and published to Power BI Service.
 
-```bash
-pip install -r requirements.txt
-python -m spacy download en_core_web_md
-```
 
-WeasyPrint needs system libraries on Linux:
+## Insights
 
-```bash
-# Fedora
-sudo dnf install -y cairo pango gdk-pixbuf2 libffi
+A single-page report was created on Power BI Desktop & published to Power BI Service. Following inferences can be drawn from the dashboard:
 
-# Debian / Ubuntu
-sudo apt install -y libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libffi-dev
-```
+### [1] Policy & Customer Overview
 
-### 3. Configure environment variables
+**Total Policies:** ~10,000 Total
+ 
+**Active Policies:** 5.81K (58.11%) 
 
-Copy the template and fill in your keys:
 
-```bash
-cp .env.example .env
-```
+ 
+**Inactive Policies:** 4.19K (41.89%) 
 
-You need:
 
-- A **Supabase** project — grab `SUPABASE_URL`, `SUPABASE_KEY` (service role), and `SUPABASE_ANON_KEY` from Project Settings → API.
-- A **Groq** API key from [console.groq.com](https://console.groq.com).
-- (Optional) Google OAuth set up in the Supabase dashboard if you want Google sign-in.
+* *Insight:* A significant portion of the customer base holds inactive policies, indicating a potential need for retention or renewal campaigns.
 
-The Streamlit frontend also reads Supabase config from `frontend/.streamlit/secrets.toml`. Copy `secrets.toml.example` to `secrets.toml` and fill it in.
 
-### 4. Run the backend
 
-From the project root:
+### [2] Financial Metrics
 
-```bash
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-```
+ 
+**Total Premium Amount:** 2.5M  + 1.2M  + 1.0M  + 0.7M  + 0.6M = 6.0M (Dashboard displays 5.97M overall).
 
-The API is now at `http://localhost:8000`.
 
-### 5. Run the frontend
 
-In a new terminal (with the venv activated):
+**Total Coverage Amount:** 600.33M 
 
-```bash
-streamlit run frontend/streamlit_app.py
-```
 
-The app opens at `http://localhost:8501`.
 
-## Notes for students
+**Total Claim Amount:** 16.90M 
 
-- **Never commit `.env` or `secrets.toml`** — they hold API keys. Both are in `.gitignore`; check before you push.
-- The first run downloads the Sentence Transformer model (~80 MB). It's cached afterwards.
-- If you don't have a Groq key yet, the scoring still works — only the LLM suggestions section will be empty.
-- `jupyter notebooks/` and `ml model/` are for experimentation and aren't required to run the app.
+
+
+### [3] Premium by Policy Type
+
+ 
+**Travel:** 2.5M (Highest revenue driver) 
+
+
+
+**Health:** 1.2M 
+
+
+
+**Auto:** 1.0M 
+
+
+
+**Life:** 0.7M 
+
+
+
+**Home:** 0.6M 
+
+
+
+### [4] Claims Status Breakdown
+
+ **Total Claims Analyzed:** 10,100
+
+**Rejected:** 4.4K 
+
+
+
+**Settled:** 3.4K 
+
+
+
+**Pending:** 2.3K 
+
+
+* *Insight:* The rejection rate is exceptionally high (higher than settled claims). This correlates directly with the negative customer feedback regarding transparency and claim trouble.
+
+
+
+### [5] Claims by Demographics (Age Group)
+
+
+**Adult:** 5.1K Claims 
+
+
+
+**Elder:** 3.8K Claims 
+
+ 
+**Young Adult:** 1.0K Claims 
+
+
+* *Insight:* The "Adult" demographic files the vast majority of claims, followed closely by the "Elder" demographic.
+
+
+
+### [6] Customer Feedback & Sentiment
+
+
+**Needs Improvement (Negative Score):** 58 Customers 
+
+
+
+**Good (Neutral/Positive Score):** 28 Customers 
+
+
+ 
+**Excellent (High Positive Score):** 11 Customers 
+
+
+* *Insight:* Nearly 60% of recorded textual feedback highlights issues. Common complaints include website outages, unexplained premium rate increases, and unclear coverage details. Management must address IT infrastructure (website downtime) and improve policy term transparency to improve these satisfaction metrics.
