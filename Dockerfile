@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     libpangoft2-1.0-0 \
     libffi-dev \
     libmagic1 \
-    libmagic-dev \
+    file \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -u 1000 user
@@ -17,7 +17,6 @@ WORKDIR /app
 
 COPY --chown=user requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install python-magic-bin
 RUN python -m spacy download en_core_web_md
 
 COPY --chown=user . /app
