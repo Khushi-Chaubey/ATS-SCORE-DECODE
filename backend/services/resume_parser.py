@@ -1,7 +1,11 @@
 import io
-import magic
-from typing import Tuple, Optional, Tuple
+try:
+    import magic
+    MAGIC_AVAILABLE = True
+except ImportError:
+    MAGIC_AVAILABLE = False
 
+from typing import Tuple, Optional
 import pdfplumber
 from docx import Document
 import PyPDF2
@@ -37,22 +41,29 @@ def validate_file(file_data:bytes, filename:str)->Tuple[bool, str, Optional[str]
             'Please upload a smaller file or compress your resume.'
         ), None
     
-    if file_size_bytes==0:
-        return False, 'uploade file is empty...please check the file you have uploaded and try again'
+    if file_size_bytes == 0:
+        return False, 'Uploaded file is empty. Please check the file and try again.', None
     
     try:
-        mime_type=magic.from_buffer(file_data, mime=True)
+        if MAGIC_AVAILABLE:
+            mime_type = magic.from_buffer(file_data, mime=True)
+        else:
+            ext = filename.lower().rsplit('.', 1)[-1] if '.' in filename else ''
+            mime_map = {
+                'pdf': 'application/pdf',
+                'doc': 'application/msword',
+                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            }
+            mime_type = mime_map.get(ext, 'application/octet-stream')
     except Exception as e:
-        return False, f"error deteminin the file type : {e}", None
+        return False, f"Error determining the file type: {e}", None
     
     if mime_type not in SUPPORTED_MIME_TYPES:
-        supported=', '.join(SUPPORTED_MIME_TYPES.keys()).upper()
+        supported = ', '.join(SUPPORTED_MIME_TYPES.keys()).upper()
         return False, (
             f'Unsupported file type: {mime_type}. '
             f'Please upload one of: {supported}.'
         ), None
-    
-    
 
     return True, '', SUPPORTED_MIME_TYPES[mime_type]
 
@@ -71,7 +82,6 @@ def _extract_pdf_hyperlinks(file_data: bytes) -> str:
                     action = annot.get('/A', {})
                     uri = action.get('/URI', '')
                     if uri and isinstance(uri, (str, bytes)):
-                        # PyPDF2 may return bytes for URI values
                         if isinstance(uri, bytes):
                             uri = uri.decode('utf-8', errors='ignore')
                         uri = uri.strip()
@@ -128,23 +138,21 @@ def _extract_pdf_with_pypdf2(file_data: bytes) -> str:
 
 def extract_text_from_pdf(file_data: bytes) -> str:
     try: 
-        result, used_fallback=with_fallback(
-        _extract_pdf_with_pdfplumber, 
-        _extract_pdf_with_pypdf2, 
-        file_data, 
-        log_fallback=True
-    )
-    
+        result, used_fallback = with_fallback(
+            _extract_pdf_with_pdfplumber, 
+            _extract_pdf_with_pypdf2, 
+            file_data, 
+            log_fallback=True
+        )
         if used_fallback:
-            log_info('PDF EXTRACTION succeded using the PyPDF2 fallback', context='resume_parser')
+            log_info('PDF EXTRACTION succeeded using PyPDF2 fallback', context='resume_parser')
         return result
         
     except Exception as e:
         log_error(e, context='extract_text_from_pdf')
         raise FileParsingError(
             'Failed to extract text from PDF using both pdfplumber and PyPDF2. '
-            'The PDF may be corrupted, password-protected, or contain only scanned images. '
-            'Please ensure it contains selectable text.'
+            'The PDF may be corrupted, password-protected, or contain only scanned images.'
         ) from e
     
 
@@ -184,45 +192,40 @@ def extract_text_from_docx(file_data: bytes) -> str:
         return text.strip()
 
     except FileParsingError:
-        raise   # Re-raise unchanged — don't wrap in another FileParsingError
+        raise
 
     except Exception as e:
         log_error(e, context='extract_text_from_docx')
         raise FileParsingError(
             'Failed to extract text from DOCX. '
-            'The document may be corrupted or in an unsupported format. '
-            'Please try re-saving or converting to PDF.'
+            'The document may be corrupted or in an unsupported format.'
         ) from e
 
 def extract_text_from_doc(file_data: bytes) -> str:
     raise FileParsingError(
         'Legacy .doc format is not supported. '
-        'Please convert your document to .docx or .pdf and try again. '
-        'You can convert using Microsoft Word, Google Docs, or online tools.'
+        'Please convert your document to .docx or .pdf and try again.'
     )
 
 def extract_text(file_data:bytes, file_type:str)->str:
-    if file_type=='pdf':
+    if file_type == 'pdf':
         return extract_text_from_pdf(file_data)
-    elif file_type=='docx':
+    elif file_type == 'docx':
         return extract_text_from_docx(file_data)
-    elif file_type=='doc':
+    elif file_type == 'doc':
         return extract_text_from_doc(file_data)
     else:
         raise FileValidationError(
-            f'invalid file type: {file_type}. supported types are: pdf, docx and doc'
-
-
+            f'Invalid file type: {file_type}. Supported types are: pdf, docx and doc'
         )
     
 def parse_resume_file(file_data: bytes, filename:str)->Tuple[str, dict]:
-    log_info(f'parsing file :{filename}', context='parse_Resume_file')
+    log_info(f'Parsing file: {filename}', context='parse_resume_file')
 
-    #phase01:validate file
     try:
-        is_valid, error_msg, file_type=validate_file(file_data, filename)
+        is_valid, error_msg, file_type = validate_file(file_data, filename)
         if not is_valid:
-            log_warning(f'valiudation failed for file {filename}', context='parse_resume_file')
+            log_warning(f'Validation failed for file {filename}', context='parse_resume_file')
             raise FileValidationError(error_msg)
     
     except FileValidationError as e:
@@ -233,15 +236,13 @@ def parse_resume_file(file_data: bytes, filename:str)->Tuple[str, dict]:
         raise FileValidationError(
             'Could not validate the uploaded file. Please ensure it is a valid PDF or DOCX.'
         ) from e
-    
-    #phase02: extraction of file
 
     try:
         text = extract_text(file_data, file_type)
         log_info(f'Extracted {len(text)} chars from {filename}', context='parse_resume_file')
 
     except FileParsingError:
-        raise   # Re-raise unchanged
+        raise
 
     except Exception as e:
         log_error(e, context='parse_resume_file_extraction')
