@@ -142,8 +142,8 @@ with st.sidebar:
                     st.session_state.user_email    = result["email"]
                 st.rerun()
 
-        st.markdown("<div style='text-align:center; margin: 8px 0; color:#94a3b8;'>or</div>",
-                    unsafe_allow_html=True)
+        #st.markdown("<div style='text-align:center; margin: 8px 0; color:#94a3b8;'>or</div>",
+                    #unsafe_allow_html=True)
 
       #  oauth = supabase_client.google_oauth_url()
        # if "error" in oauth:
