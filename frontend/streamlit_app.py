@@ -118,6 +118,64 @@ if st.session_state.theme == 'dark':
         color: var(--text-primary) !important;
         border-color: var(--border) !important;
     }
+                /* Fix "Create account" submit button visibility in dark mode */
+    .stFormSubmitButton > button {
+        background: linear-gradient(135deg, var(--primary), var(--accent)) !important;
+        color: white !important;
+        border: none !important;
+    }
+
+    .stFormSubmitButton > button p {
+        color: white !important;
+    }
+
+    .stFormSubmitButton > button:disabled {
+        background: var(--bg-card) !important;
+        color: var(--text-muted) !important;
+        opacity: 0.6 !important;
+    }
+
+    /* Fix file uploader "Upload" button visibility in dark mode */
+    [data-testid="stFileUploaderDropzone"] button {
+        background: var(--bg-sidebar) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border) !important;
+    }
+
+    [data-testid="stFileUploaderDropzone"] button p,
+    [data-testid="stFileUploaderDropzone"] button span {
+        color: var(--text-primary) !important;
+    }
+
+    [data-testid="stFileUploaderDropzone"] {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-testid="stFileUploaderDropzoneInstructions"] {
+        color: var(--text-secondary) !important;
+    }
+
+    /* Fix Download buttons (e.g. "Download Summary") in dark mode */
+    .stDownloadButton > button {
+        background: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border) !important;
+    }
+
+    .stDownloadButton > button p {
+        color: var(--text-primary) !important;
+    }
+
+    .stDownloadButton > button:disabled {
+        background: var(--bg-card) !important;
+        color: var(--text-muted) !important;
+        opacity: 0.5 !important;
+    }
+
+    .stDownloadButton > button:hover:not(:disabled) {
+        border-color: var(--primary) !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
