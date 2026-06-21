@@ -76,6 +76,48 @@ if st.session_state.theme == 'dark':
             --background-white: #13132A !important;
             --border-color: rgba(108, 99, 255, 0.2) !important;
         }
+                
+                /* Fix sidebar button text visibility in dark mode */
+    [data-testid="stSidebar"] .stButton > button {
+        background: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border) !important;
+    }
+
+    [data-testid="stSidebar"] .stButton > button p {
+        color: var(--text-primary) !important;
+    }
+
+    [data-testid="stSidebar"] .stButton > button:hover {
+        border-color: var(--primary) !important;
+        background: var(--bg-sidebar) !important;
+    }
+
+    /* Fix Sign in / Sign up tab spacing and visibility */
+    [data-testid="stSidebar"] .stTabs [data-baseweb="tab-list"] {
+        gap: 0.5rem !important;
+        padding: 0.35rem !important;
+    }
+
+    [data-testid="stSidebar"] .stTabs [data-baseweb="tab"] {
+        padding: 0.5rem 1rem !important;
+        color: var(--text-secondary) !important;
+    }
+
+    [data-testid="stSidebar"] .stTabs [aria-selected="true"] {
+        color: white !important;
+    }
+
+    /* Fix text input labels and fields in sidebar dark mode */
+    [data-testid="stSidebar"] label {
+        color: var(--text-primary) !important;
+    }
+
+    [data-testid="stSidebar"] input {
+        background: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border) !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
