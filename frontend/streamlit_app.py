@@ -26,7 +26,8 @@ for key, default in [
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
-
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'light'
 # Google OAuth disabled
 # to the redirect URL. Exchange it for a session before rendering anything.
 #if (
@@ -58,13 +59,62 @@ def load_css():
 
 st.markdown(load_css(), unsafe_allow_html=True)
 
+if st.session_state.theme == 'dark':
+    st.markdown("""
+    <style>
+        :root {
+            --bg-base: #0D0D1A !important;
+            --bg-card: #13132A !important;
+            --bg-glass: rgba(19, 19, 42, 0.85) !important;
+            --bg-sidebar: #0A0A18 !important;
+            --text-primary: #F0EEFF !important;
+            --text-secondary: #A0A0C0 !important;
+            --text-muted: #606080 !important;
+            --border: rgba(108, 99, 255, 0.2) !important;
+            --border-strong: rgba(108, 99, 255, 0.4) !important;
+            --background-light: #13132A !important;
+            --background-white: #13132A !important;
+            --border-color: rgba(108, 99, 255, 0.2) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Theme state — defaults to light
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'light'
+
+# Inject the data-theme attribute onto the root app container
+st.markdown(f"""
+<script>
+    var streamlitDoc = window.parent.document;
+    streamlitDoc.documentElement.setAttribute('data-theme', '{st.session_state.theme}');
+</script>
+""", unsafe_allow_html=True)
+
+st.markdown(f"""
+<style>
+    .stApp {{
+        /* force re-render hook so theme vars apply immediately */
+    }}
+</style>
+<div data-theme-marker="{st.session_state.theme}"></div>
+""", unsafe_allow_html=True)
+
 # Initialize session state for view management
 if 'current_view' not in st.session_state:
     st.session_state.current_view = 'landing'
 
-# Sidebar navigation
+#toggle-button
 with st.sidebar:
+    theme_icon = "🌙" if st.session_state.theme == "light" else "☀️"
+    theme_text = "Switch to Dark" if st.session_state.theme == "light" else "Switch to Light"
+    if st.button(f"{theme_icon} {theme_text}", use_container_width=True):
+        st.session_state.theme = 'dark' if st.session_state.theme == 'light' else 'light'
+        st.rerun()
+
+    st.markdown("---")
     st.markdown("## Navigation")
+
     
     if st.button("🏠 Home", use_container_width=True):
         st.session_state.current_view = 'landing'
